@@ -12,7 +12,7 @@ function AllExpenses({
 
   const expensesCtx = useContext(ExpensesContext);
   const items = expensesCtx.expenses;
-  console.log(items);
+  // console.log(items);
 
   const expensesSum = items
     .reduce((sum, expense) => {

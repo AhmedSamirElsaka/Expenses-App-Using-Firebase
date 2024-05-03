@@ -31,6 +31,7 @@ const styles = StyleSheet.create({
     margin: 8,
     marginHorizontal: 24,
     backgroundColor: GlobalStyles.colors.ExpenseItemColor,
+    borderRadius: 8,
   },
   golbalInnerContainer: {
     padding: 8,

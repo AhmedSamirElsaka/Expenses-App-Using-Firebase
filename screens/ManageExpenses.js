@@ -5,13 +5,23 @@ import IconButton from "../components/UI/IconButton";
 import { useContext, useLayoutEffect, useState } from "react";
 import { ExpensesContext } from "../store/expenses-context";
 import ExpenseForm from "../components/ManagaeExpense/ExpenseForm";
+import {
+  deleteExpense,
+  storeExpense,
+  updateExpense,
+  updateExpenses,
+} from "../utils/http";
+import ErrorOverlay from "../components/UI/ErrorOverlay";
 function ManageExpenses({ navigation }) {
   const routed = useRoute();
   const type = routed.params.type;
   const managedItemId = routed.params.expenseItemId;
 
-  const expensesCtx = useContext(ExpensesContext);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const [error, setError] = useState();
+
+  const expensesCtx = useContext(ExpensesContext);
   const selectedExpense = expensesCtx.expenses.find(
     (expense) => expense.id === managedItemId
   );
@@ -40,18 +50,39 @@ function ManageExpenses({ navigation }) {
   //       });
   //   navigation.goBack();
   // }
-
-  function confirmHandler(expenseData) {
-    type === "edit"
-      ? expensesCtx.updateExpense(managedItemId, expenseData)
-      : expensesCtx.addExpense(expenseData);
-
-    navigation.goBack();
+  async function confirmHandler(expenseData) {
+    setIsSubmitting(true);
+    try {
+      if (isEditing) {
+        expensesCtx.updateExpense(editedExpenseId, expenseData);
+        await updateExpense(editedExpenseId, expenseData);
+      } else {
+        const id = await storeExpense(expenseData);
+        expensesCtx.addExpense({ ...expenseData, id: id });
+      }
+      navigation.goBack();
+    } catch (error) {
+      setError("Could not save data - please try again later!");
+      setIsSubmitting(false);
+    }
   }
 
-  function deleteExpenseHandler() {
-    expensesCtx.deleteExpense(managedItemId);
-    navigation.goBack();
+  if (error && !isSubmitting) {
+    return <ErrorOverlay message={error} />;
+  }
+  if (isSubmitting) {
+    return <LoadingOverlay />;
+  }
+  async function deleteExpenseHandler() {
+    setIsSubmitting(true);
+    try {
+      await deleteExpense(editedExpenseId);
+      expensesCtx.deleteExpense(editedExpenseId);
+      navigation.goBack();
+    } catch (error) {
+      setError("Could not delete expense - please try again later!");
+      setIsSubmitting(false);
+    }
   }
 
   return (
